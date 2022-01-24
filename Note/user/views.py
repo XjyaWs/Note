@@ -65,16 +65,22 @@ def user_interface_view(request: HttpRequest):
     user_name = request.session.get('user_name')
     password = request.session.get('password')
 
-    if user_name:
-        """
-        登录成功之后
-        1. 修改密码功能 ok
-        2. 登出功能 ok
-        3. 显示用户数据
-        """
-        return render(request, 'user/user_interface.html', locals())
-    else:
-        return HttpResponseRedirect(reverse('user_login'))
+    try:
+        target_user = User.objects.get(username=user_name)
+    except Exception as e:
+        return render(request, 'user/login_failed.html', {'error', e})
+
+    """
+    登录成功之后
+    1. 修改密码功能 ok
+    2. 登出功能 ok
+    3. 显示用户数据
+    """
+    # 取出用户的创建时间以及更新时间
+    create_time = target_user.create_time
+    update_time = target_user.update_time
+
+    return render(request, 'user/user_interface.html', locals())
 
 
 def change_password(request: HttpRequest):

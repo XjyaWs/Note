@@ -8,5 +8,12 @@
 <h3>欢迎{{user_name}}</h3>
 <a href="{% url 'change_password' %}">修改密码</a>
 <a href="{% url 'user_login' %}">登出</a>
+<br>
+<br>
+<br>
+<p>
+    用户创建时间：{{create_time}}<br>
+    用户最近更新时间：{{update_time}}
+</p>
 </body>
 </html>
