@@ -41,34 +41,46 @@ def register_view(request: HttpRequest):
     if request.method == 'GET':
         return render(request, 'user/register.html')
     if request.method == 'POST':
-        # 获取注册中输入的用户名和密码
+        # 获取注册中输入的用户名和密码以及确认密码
         user_name = request.POST.get("user_name")
         password = request.POST.get("password")
+        password_check = request.POST.get("password_check")
 
-        try:
-            user = User(username=user_name, password=password)
-            user.save()
-        except Exception as e:
-            # 当生成用户失败时 输出报错信息
-            return render(request, 'user/register_failed.html', {'error': e})
+        # 首先确保 密码确认成功
+        if password == password_check:
+            try:
+                user = User(username=user_name, password=password)
+                user.save()
+            except Exception as e:
+                # 当生成用户失败时 输出报错信息
+                return render(request, 'user/register_failed.html', {'error': e})
 
-        # 成功后将用户名密码保存到session中
-        request.session['user_name'] = user_name
-        request.session['password'] = password
+            # 成功后将用户名密码保存到session中
+            request.session['user_name'] = user_name
+            request.session['password'] = password
 
-        return render(request, 'user/register_success.html')
+            return render(request, 'user/register_success.html')
+
+        else:
+            # 密码确认失败 返还错误页面
+            return render(request, 'user/register_failed.html', {'error': '两次密码输入不相同'})
 
 
 def user_interface_view(request: HttpRequest):
 
     # 从session中获取用户名和密码
     user_name = request.session.get('user_name')
-    password = request.session.get('password')
+    # 如果为空需要转跳登录界面
+    if user_name:
+        password = request.session.get('password')
+    else:
+        return HttpResponseRedirect(reverse('user_login'))
 
     try:
         target_user = User.objects.get(username=user_name)
     except Exception as e:
-        return render(request, 'user/login_failed.html', {'error', e})
+        # 产生错误时倒回登录失败界面 （除非session被修改，不然不会产生错误）
+        return render(request, 'user/login_failed.html', {'error': e})
 
     """
     登录成功之后
@@ -87,29 +99,46 @@ def change_password(request: HttpRequest):
 
     # 从session中获取用户名和密码
     user_name = request.session.get('user_name')
-    password = request.session.get('password')
+    # 如果为空需要转跳登录界面
+    if user_name:
+        password = request.session.get('password')
+    else:
+        return HttpResponseRedirect(reverse('user_login'))
 
     if request.method == 'GET':
 
         return render(request, 'user/change_password.html', locals())
 
     elif request.method == 'POST':
-        try:
+        # 通过post获取用户输入的旧密码、新密码以及确认密码
+        origin_password = request.POST.get('origin_password')
+        new_password = request.POST.get('new_password')
+        password_check = request.POST.get('password_check')
 
-            # 通过post获取用户输入的新密码
-            new_password = request.POST.get('password')
+        # 先判断 旧密码是否正确
+        if origin_password == password:
+            # 再检查密码确认
+            if password_check == new_password:
 
-            # 通过get方法找到该用户的数据
-            target_user = User.objects.get(username=user_name)
+                try:
+                    # 通过get方法找到该用户的数据
+                    target_user = User.objects.get(username=user_name)
 
-            # 更新密码
-            target_user.password = new_password
-            target_user.save()
+                    # 更新密码
+                    target_user.password = new_password
+                    target_user.save()
 
-        except Exception as e:
-            return render(request, 'user/change_password_failed.html', {'error': e})
+                except Exception as e:
+                    return render(request, 'user/change_password_failed.html', {'error': e})
 
-        # 更新session中的密码
-        request.session['password'] = new_password
+                # 更新session中的密码
+                request.session['password'] = new_password
 
-        return render(request, 'user/change_password_success.html')
+                return render(request, 'user/change_password_success.html')
+
+            else:
+                return render(request, 'user/change_password_failed.html', {'error': '两次密码输入不相同'})
+
+        else:
+            # 旧密码错误
+            return render(request, 'user/change_password_failed.html', {'error': '密码输入错误'})

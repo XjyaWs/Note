@@ -7,7 +7,8 @@
 <body>
     <form method="post" action="">
         用户名: <input type="text" name="user_name"><br>
-        密码：<input type="text" name="password"><br>
+        密码：<input type="password" name="password"><br>
+        再次输入密码：<input type="password" name="password_check"><br>
         <input type="submit" value="注册">
     </form>
     <a href="{% url 'user_login' %}">返回</a>
