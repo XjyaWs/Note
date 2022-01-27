@@ -28,34 +28,44 @@ def password_is_correct(password, user: User):
 def login_view(request: HttpRequest):
 
     if request.method == 'GET':
-
-        # 删除session中存储的user_name和uid
-        if request.session.get('user_name'):
-            del request.session['user_name']
-            del request.session['uid']
-        return render(request, 'user/login.html')
+        # 检查登录状态
+        # 如果是已登录状态转跳用户界面
+        if request.session.get('uid') or request.COOKIES.get('uid'):
+            return HttpResponseRedirect(reverse('user_interface'))
+        else:
+            return render(request, 'user/login.html')
 
     elif request.method == 'POST':
         # 获取登录中输入的用户名和密码
         user_name = request.POST.get("user_name")
         password = request.POST.get("password")
 
+        if not user_name:
+            return render(request, 'user/login_failed.html', {'error': "用户名不能为空"})
+
         try:
             user = User.objects.get(username=user_name)
-        except Exception:
+        except Exception as e:
+            print('--user login error-- Detail: {}'.format(e))
             # 当寻找用户失败 输出报错信息
-            return render(request, 'user/login_failed.html', {'error': "用户不存在"})
+            return render(request, 'user/login_failed.html', {'error': "用户或密码不正确"})
 
         if password_is_correct(password, user):
-            # 登录成功之后 修改或新增两个session字段储存登录的用户名和密码
+            # 登录成功之后 修改或新增两个session字段储存登录的用户名和用户id
             request.session['user_name'] = user_name
             request.session['uid'] = user.id
 
+            # 检测用户是会否勾选了记住用户(传递cookies信息) 将登录状态保持3天
+            response = HttpResponseRedirect(reverse('user_interface'))
+            if "remember_user" in request.POST:
+                response.set_cookie('user_name', user_name, 60 * 60 * 24 * 3)
+                response.set_cookie('uid', user.id, 60 * 60 * 24 * 3)
+
             # 转跳用户界面
-            return HttpResponseRedirect(reverse('user_interface'))
+            return response
         else:
             # 登录密码不正确输出密码错误信息
-            return render(request, 'user/login_failed.html', {'error': "密码错误"})
+            return render(request, 'user/login_failed.html', {'error': "用户或密码不正确"})
 
 
 def register_view(request: HttpRequest):
@@ -66,6 +76,9 @@ def register_view(request: HttpRequest):
         user_name = request.POST.get("user_name")
         password = request.POST.get("password")
         password_check = request.POST.get("password_check")
+
+        if not user_name:
+            return render(request, 'user/login_failed.html', {'error': "用户名不能为空"})
 
         # 首先确保 密码确认成功
         if password != password_check:
@@ -117,7 +130,16 @@ def user_interface_view(request: HttpRequest):
     if uid:
         user_name = request.session.get('user_name')
     else:
-        return HttpResponseRedirect(reverse('user_login'))
+        # 再检查cookies
+        # 从cookies中获取用户名id
+        uid = request.COOKIES.get("uid")
+        if uid:
+            user_name = request.COOKIES.get("user_name")
+            # 将数据复写入session中
+            request.session['uid'] = uid
+            request.session['user_name'] = user_name
+        else:
+            return HttpResponseRedirect(reverse('index'))
 
     try:
         target_user = User.objects.get(id=uid)
@@ -130,7 +152,15 @@ def user_interface_view(request: HttpRequest):
     1. 修改密码功能 ok
     2. 登出功能 ok
     3. 显示用户数据
+        1. 添加新笔记功能 ok
+        2. 显示笔记列表
+            1.查看功能
+            2.修改功能
+            3.删除功能
     """
+    # 取出用户相关的所有笔记
+    notes = target_user.note.filter(is_active=True)
+
     # 取出用户的创建时间以及更新时间
     create_time = target_user.create_time
     update_time = target_user.update_time
@@ -139,14 +169,19 @@ def user_interface_view(request: HttpRequest):
 
 
 def change_password(request: HttpRequest):
-
     # 从session中获取用户名id
     uid = request.session.get('uid')
     # 如果为空需要转跳登录界面
     if uid:
         user_name = request.session.get('user_name')
     else:
-        return HttpResponseRedirect(reverse('user_login'))
+        # 再检查cookies
+        # 从cookies中获取用户名id
+        uid = request.COOKIES.get("uid")
+        if uid:
+            user_name = request.COOKIES.get("user_name")
+        else:
+            return HttpResponseRedirect(reverse('index'))
 
     if request.method == 'GET':
 
@@ -158,7 +193,7 @@ def change_password(request: HttpRequest):
             # 通过get方法找到该用户的数据
             target_user = User.objects.get(id=uid)
         except Exception as e:
-            print(e)
+            print('--change password error-- Detail: {}'.format(e))
             return render(request, 'user/change_password_failed.html', {'error': '用户不存在'})
 
         # 通过post获取用户输入的旧密码、新密码以及确认密码
@@ -184,10 +219,23 @@ def change_password(request: HttpRequest):
             target_user.password = password_after_hash
             target_user.save()
         except Exception as e:
-            print(e)
+            print('--change password error-- Detail: {}'.format(e))
             return render(request, 'user/change_password_failed.html', {'error': e})
 
         return render(request, 'user/change_password_success.html')
 
 
+def logout_view(request: HttpRequest):
 
+    response = HttpResponseRedirect(reverse('index'))
+    # 删除session中存储的user_name和uid
+    if 'uid' in request.session:
+        del request.session['user_name']
+        del request.session['uid']
+
+    # 删除cookies
+    if 'uid' in request.COOKIES:
+        response.delete_cookie('uid')
+        response.delete_cookie('user_name')
+
+    return response

@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Web Settings
+# session的周期改为1天
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 1
 
 # Application definition
 
@@ -39,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'user',
+    'notes',
 ]
 
 MIDDLEWARE = [

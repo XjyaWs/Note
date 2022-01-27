@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{target_note.title}}</title>
+</head>
+<body>
+<h3>
+    {{target_note.title}}
+</h3>
+<p>
+    作者：{{user_name}}
+</p>
+<p>
+    {{target_note.content}}
+</p>
+<p>
+    创建时间：{{target_note.create_time}}
+</p>
+<p>
+    最近修改时间：{{target_note.update_time}}
+</p>
+<p>
+    <a href="{% url 'user_interface' %}">返回</a>
+</p>
+</body>
+</html>

@@ -6,6 +6,20 @@
 </head>
 <body>
 <h1>首页</h1>
-<a href="{% url 'user_login' %}">登录</a>
+{% if login_flag %}
+<p>
+    欢迎{{user_name}}
+</p>
+<p>
+    <a href="{% url 'user_interface' %}">进入云笔记</a>
+</p>
+{% else %}
+<p>
+    <a href="{% url 'user_login' %}">登录</a>
+</p>
+<p>
+    <a href="{% url 'user_register' %}">注册</a>
+</p>
+{% endif %}
 </body>
 </html>

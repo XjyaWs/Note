@@ -9,8 +9,12 @@
         <p>用户名: <input type="text" name="user_name"></p>
         <p>密码：<input type="password" name="password"></p>
         <p>再次输入密码：<input type="password" name="password_check"></p>
-        <input type="submit" value="注册">
+        <p>
+            <input type="submit" value="注册">
+        </p>
     </form>
-    <a href="{% url 'user_login' %}">返回</a>
+    <p>
+        <a href="{% url 'index' %}">返回</a>
+    </p>
 </body>
 </html>

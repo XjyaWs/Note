@@ -26,4 +26,5 @@ urlpatterns = [
 
     # 分布式路由
     path('user/', include('user.urls')),
+    path('notes/', include('notes.urls')),
 ]

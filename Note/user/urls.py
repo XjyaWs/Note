@@ -1,11 +1,12 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from . import views
 
 urlpatterns = [
 
     # 登录界面
     path('login/', views.login_view, name='user_login'),
+    # 登出
+    path('logout/', views.logout_view, name='user_logout'),
 
     # 注册界面
     path('register/', views.register_view, name='user_register'),

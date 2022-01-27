@@ -6,11 +6,34 @@
 </head>
 <body>
 <h3>欢迎{{user_name}}</h3>
-<a href="{% url 'change_password' %}">修改密码</a>
-<a href="{% url 'user_login' %}">登出</a>
-<br>
-<br>
-<br>
+<p>
+    <a href="{% url 'change_password' %}">修改密码</a>
+    <a href="{% url 'user_logout' %}">登出</a>
+</p>
+<p>
+    <a href="{% url 'new_note' %}">添加新笔记</a>
+</p>
+
+<table border="1">
+    <tr>
+        <th>标题</th>
+        <th>创建时间</th>
+        <th>最新修改时间</th>
+        <th>操作</th>
+    </tr>
+    {% for note in notes %}
+    <tr>
+        <td><a href="{% url 'note_detail' note.id %}">{{note.title}}</a></td>
+        <td>{{note.create_time}}</td>
+        <td>{{note.update_time}}</td>
+        <td>
+            <a href="{% url 'update_note' note.id %}">修改</a>
+            <a href="{% url 'delete_note' note.id %}">删除</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
 <p>
     用户创建时间：{{create_time}} UTC<br>
     用户最近更新时间：{{update_time}} UTC

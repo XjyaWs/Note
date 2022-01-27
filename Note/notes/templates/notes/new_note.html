@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加新笔记</title>
+</head>
+<body>
+<form method="post" action="">
+    <p>
+        标题：<input type="text" name="title">
+    </p>
+    <p>
+        <p>正文：</p>
+        <textarea style="width: 500px;height: 200px;" name="content"></textarea>
+    </p>
+    <p>
+        <input type="submit" value="新建">
+    </p>
+</form>
+<p>
+    <a href="{% url 'user_interface' %}">返回</a>
+</p>
+</body>
+</html>
